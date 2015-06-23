@@ -1,3 +1,0 @@
-Single server.
-Multiple non-parallel clients. (10 in total)
-Each client calls server 1000times.

@@ -1,7 +1,0 @@
-Single server.
-10 simultanious client.
-Server has service serv1 with 'Add' method.
-Client has service serv2 with 'Mult' method.
-Client calls 'Add' 1000 times. Server's 'Add' calls client's 'Mult'.
-
-This test validates that server calls proper client's Mult method;

@@ -1,1 +1,0 @@
-Tests delivery of on_disconnect signal.

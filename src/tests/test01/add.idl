@@ -1,4 +1,0 @@
-service Calc
-{
-   Add(in int a, in int b, out int result); 
-}

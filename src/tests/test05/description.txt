@@ -1,4 +1,0 @@
-Single server.
-Single client.
-2 services registered in server.
-Client calls methods from each service 1000times.

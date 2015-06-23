@@ -1,5 +1,0 @@
-service serv3
-{
-   Shl(in int a, in int b, out int result); 
-   Shr(in int a, in int b, out int result); 
-}

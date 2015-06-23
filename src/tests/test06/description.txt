@@ -1,4 +1,0 @@
-Single server.
-Single 10 clients working in parallel.
-2 services registered in server.
-Each client calls methods from each service 1000times.

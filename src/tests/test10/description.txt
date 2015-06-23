@@ -1,6 +1,0 @@
-Single server.
-10 simultanious client.
-Server has service serv1,serv2,serv3 with methods Add,Sub,Mult,Div,Shr,Shl.
-Client calls those functions 1000 times.
-
-This test validates that server can publish various services and those can be used properly by clients.

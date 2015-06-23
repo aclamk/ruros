@@ -1,1 +1,0 @@
-Tests possibility of having both client and server side in one process.

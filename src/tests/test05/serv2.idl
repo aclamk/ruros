@@ -1,0 +1,4 @@
+service serv2
+{
+   Mult(in int a, in int b, out int result); 
+}

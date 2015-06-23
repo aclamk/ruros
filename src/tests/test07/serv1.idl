@@ -1,0 +1,5 @@
+service serv1
+{
+   Register();
+   Add(in int a, in int b, out int result); 
+}

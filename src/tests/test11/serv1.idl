@@ -1,0 +1,10 @@
+service serv1
+{
+   Add(in int a, in int b, out int result); 
+   @server disconnect client_disconnected;
+   @server cleanup all_calls_finished;
+   @server accept accept_connection;
+
+   @client name aclient;
+   @client disconnect server_disconnected;
+}

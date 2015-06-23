@@ -1,0 +1,4 @@
+service Service0
+{
+   validate(in vector_of_string requested_funcs, out uint16_t service_id,out bool accepted);
+}

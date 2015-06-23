@@ -1,0 +1,19 @@
+
+service Xipi
+{
+  func_F(in int a, in int b, out int c); 
+  func_G(in int a, inout int b);
+  func_H(int x, int y);
+  registerCallback(int a,int b,int c);
+
+@server name opopopo::server_name;
+@server disconnect client_disconnected;
+@server cleanup xxx::all_calls_finished;
+@server accept xxx::yyy::VV::XX::accept_B;
+
+@client name aclient;
+@client disconnect yyy::server_disconnected;
+
+}
+
+

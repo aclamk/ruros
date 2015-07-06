@@ -131,8 +131,10 @@ std::string generate_client_stubs(const gen::Service& service)
 		out+=
 		")\n"
 		"{\n"
-		"    Result __res=Success;\n"
-		"    std::string __debug;\n"
+		"    Result __res=Success;\n";
+		if(service.debug)
+           out+="    std::string __debug;\n";
+        out+=
 		"    std::string __data;\n"
 		"    __data+=(char)"+string(f)+";\n";
 		for(i=0;i<func.args.size();i++)
@@ -142,25 +144,31 @@ std::string generate_client_stubs(const gen::Service& service)
 				out+="    if(__res==Success) __res=serialize_"+func.args[i].type+"(__data,"+func.args[i].name+");\n";
 			}
 		}
-
-		out+=
-		"    if(isdebug())\n"
-		"    {\n"
-		"        std::string __s;\n";
-		for(i=0;i<func.args.size();i++)
-		{
-			if(func.args[i].dir==gen::d_in||func.args[i].dir==gen::d_inout)
-			{
-				out+="        __s+=\""+func.args[i].name+"=\"+"+
-						"tostring_"+func.args[i].type+"("+func.args[i].name+")+\" \";\n";
-			}
-		}
-		out+="        __debug=\""+service.name+"::"+func.name+"( \"+__s+\")\";\n";
-		//out+="        __debug.scs="+service.name+"_client_side;\n";
-		out+="    }\n";
-
-		out+=
-		"    if(__res==Success) __res=client_call(&"+service.name+"_client_side,__data,&__debug);\n";
+        if(service.debug)
+        {
+           out+=
+           "    if(isdebug())\n"
+           "    {\n"
+           "        std::string __s;\n";
+           for(i=0;i<func.args.size();i++)
+           {
+              if(func.args[i].dir==gen::d_in||func.args[i].dir==gen::d_inout)
+              {
+                 out+="        __s+=\""+func.args[i].name+"=\"+"+
+                 "tostring_"+func.args[i].type+"("+func.args[i].name+")+\" \";\n";
+              }
+           }
+           out+="        __debug=\""+service.name+"::"+func.name+"( \"+__s+\")\";\n";
+           //out+="        __debug.scs="+service.name+"_client_side;\n";
+           out+="    }\n";
+        }
+        if(service.debug)
+           out+=
+           "    if(__res==Success) __res=client_call(&"+service.name+"_client_side,__data,&__debug);\n";
+        else
+           out+=
+           "    if(__res==Success) __res=client_call(&"+service.name+"_client_side,__data,NULL);\n";
+           
 		for(i=0;i<func.args.size();i++)
 		{
 			if(func.args[i].dir==gen::d_out||func.args[i].dir==gen::d_inout)
@@ -168,22 +176,23 @@ std::string generate_client_stubs(const gen::Service& service)
 						out+="    if(__res==Success) __res=deserialize_"+func.args[i].type+"(__data,"+func.args[i].name+");\n";
 			}
 		}
-
-		out+=
-		"    if(isdebug())\n"
-		"    {\n"
-		"        std::string __s;\n";
-		for(i=0;i<func.args.size();i++)
-		{
-			if(func.args[i].dir==gen::d_out||func.args[i].dir==gen::d_inout)
-			{
-				out+="        __s+=\""+func.args[i].name+"=\"+"+
-						"tostring_"+func.args[i].type+"("+func.args[i].name+")+\" \";\n";
-			}
-		}
-		out+="        debug(__debug+\" "+service.name+"::"+func.name+"( \"+__s+\")\");\n";
-		out+="    }\n";
-
+        if(service.debug)
+        {
+           out+=
+           "    if(isdebug())\n"
+           "    {\n"
+           "        std::string __s;\n";
+           for(i=0;i<func.args.size();i++)
+           {
+              if(func.args[i].dir==gen::d_out||func.args[i].dir==gen::d_inout)
+              {
+                 out+="        __s+=\""+func.args[i].name+"=\"+"+
+                 "tostring_"+func.args[i].type+"("+func.args[i].name+")+\" \";\n";
+              }
+           }
+           out+="        debug(__debug+\" "+service.name+"::"+func.name+"( \"+__s+\")\");\n";
+           out+="    }\n";
+        }
 		out+=
 		"    return __res;\n"
 		"}\n"

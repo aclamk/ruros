@@ -72,7 +72,7 @@ Result client_call(ServiceClientSide* serv,/*uint8_t callid,*/std::string& io_da
 			thr->recursion_count=1;
 		}
 		//printf("CC cal tid=%d conn=%p thr=%p cnt=%d\n",tid,conn,thr,thr->recursion_count);
-		if(isdebug())
+		if(isdebug()&&__debug&&__debug->size()>0)
 		{
 			char buf[25];
 			sprintf(buf,"o_tid=%d CALL ",tid);

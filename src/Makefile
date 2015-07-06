@@ -22,4 +22,4 @@ service0.client.cpp service0.server.cpp: service0.idl gen/gen
 all:	$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) service0.client.cpp service0.server.cpp

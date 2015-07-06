@@ -176,7 +176,7 @@ void publishService(ServiceServerSide* serv)
 	if(published_services.size()==0)
 		published_services.push_back(&service0serverside::Service0_server_side);
 	published_services.push_back(serv);
-	printf("published %s at index %d\n",serv->name,published_services.size()-1);
+	//printf("published %s at index %d\n",serv->name,published_services.size()-1);
 }
 
 
@@ -377,19 +377,17 @@ ConnectionRef getUsedConnection()
 
 bool isdebug()
 {
-	return false;
+	return true;
 }
 void debug(const std::string& s)
 {
-	//printf("%s\n",s.c_str());
+	printf("%s\n",s.c_str());
 }
 
 void init() __attribute__((constructor));
 void init()
 {
-	//printf("ssssss\n");
 	sem_init(&Thread::worker_created_sem,0,0);
 	pthread_key_create(&Thread::thread_key,NULL);
-
 }
 }

@@ -48,6 +48,7 @@ struct Service
 	std::vector<Function> functions;
 
 	std::vector<Option> options;
+    bool debug;
 /*
 	std::string client_name;
 	std::string client_disconnect;

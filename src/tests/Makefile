@@ -13,9 +13,8 @@ test_subdirs_clean=$(patsubst %,%.clean,$(test_subdirs))
 .PHONY: test%.build test%.run test%.clean
 
 test%.build: ruros-test.a
-	echo X $(patsubst %.build,%,$@)
 	make -C $(patsubst %.build,%,$@)
-	
+
 test%.run: test%.build
 	make -C $(patsubst %.run,%,$@) run
 
@@ -23,13 +22,11 @@ test%.clean:
 	make -C $(patsubst %.clean,%,$@) clean
 
 build: $(test_subdirs_build)
-	
+
 run: $(test_subdirs_run)
 	@echo $(test_subdirs)
 	@echo $(test_subdirs_x)
-	
-	
-	
+
 ruros-test.a: unix_io.o 
 	ar cr $@ $^
 

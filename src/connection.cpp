@@ -190,7 +190,7 @@ void Connection::try_on_client_cleanup()
 	{
 		if(incoming_calls_cnt==0)
 		{
-			printf("calling for cleanup %d\n",this->server_services.size());
+           //printf("calling for cleanup %d\n",this->server_services.size());
 			for(size_t i=0;i<this->server_services.size();i++)
 			{
 				if(server_services[i]->on_client_cleanup!=NULL)
@@ -285,7 +285,6 @@ Result Connection::recvMessage(std::string& msg)
 
 	if(res==Disconnected)
 	{
-		printf("State=%d\n",state);
 		pthread_mutex_lock(&lock);
 		if(state==Active)
 			state=Closed;

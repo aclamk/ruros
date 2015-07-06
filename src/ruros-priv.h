@@ -189,7 +189,7 @@ struct ServiceClientSideID
 class Connection
 {
 public:
-	Connection():io(NULL),ref_cnt(0),incoming_calls_cnt(0),state(Active),lock(PTHREAD_MUTEX_INITIALIZER){printf("Y %d\n",state);};
+	Connection():io(NULL),ref_cnt(0),incoming_calls_cnt(0),state(Active),lock(PTHREAD_MUTEX_INITIALIZER){};
 	bool setRawIO(RawIO* io);
 	//bool registerServer(ServiceServerSide* sserver);
 	bool requestService(ServiceClientSide* scs);

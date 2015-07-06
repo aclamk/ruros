@@ -9,11 +9,8 @@
 
 gen::YYpos yypos=
 		{
-			.file = std::string("--stdin--"),
-			.line = 1,
-			.col  = 1
-		}
-		;
+			std::string("--stdin--"),1,1
+		};
 
 //        std::string yypos.file("--stdin--");
 //        int yypos.line=1;
@@ -306,6 +303,7 @@ int main( int argc, char **argv )
 	FILE* fserver=NULL;
 	FILE* fclient=NULL;
 	FILE* fidl=NULL;
+    curr_service.debug=false;
 	++argv, --argc;  /* skip over program name */
 	while(argc > 0)
 	{
@@ -356,6 +354,11 @@ int main( int argc, char **argv )
 				exit(1);
 			}
 			argc--;argv++;
+		}
+        else if(strcmp(*argv,"-debug")==0)
+		{
+			argc--;argv++;
+            curr_service.debug=true;
 		}
 		else
 		{

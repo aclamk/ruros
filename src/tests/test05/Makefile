@@ -9,7 +9,7 @@ COPTS=-g -I ../../ -I ../
 	make -C ../..
 ../ruros-test.a:
 	make -C ..
-	
+
 clean:
 	rm -f serv1.client.cpp serv1.server.cpp serv2.client.cpp serv2.server.cpp 
 	rm -f client.o server.o client server socket

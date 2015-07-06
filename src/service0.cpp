@@ -38,7 +38,7 @@ Result validate(const std::vector<std::string>& rq_funcs, uint16_t& service_id, 
 		{
 			service_id=i;//conn->server_services.size();
 			conn->server_services.push_back(published_services[i]);
-			printf("SIZE=%d\n",conn->server_services.size());
+			//printf("SIZE=%d\n",conn->server_services.size());
 			break;
 		}
 	}

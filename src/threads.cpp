@@ -69,7 +69,9 @@ void Thread::worker_loop()
 	{
 		wait(recv_data);
 		//printf("worker wakeup tid=%d\n",original_tid);
-		conn=getUsedConnection();
+		//conn=getUsedConnection();
+        conn=wakeup_conn;
+        setUsedConnection(conn);
 
 		if(recv_data.size()>0)
 		{
@@ -110,8 +112,10 @@ Result Thread::clientCallwaitReturn(Connection* conn, std::string& io_data)
 			case CmdCall:
 			{
 				//backcall, this call may be from any registered service
-				Connection* used_connection=this->getUsedConnection();
-				res=this->handleCall(conn,io_data);
+				//Connection* used_connection=this->getUsedConnection();
+                Connection* used_connection=wakeup_conn;
+                setUsedConnection(used_connection);
+				res=this->handleCall(used_connection,io_data);
 				//printf("XXXXX\n");
 				used_connection->unref();
 				if(res==Success)

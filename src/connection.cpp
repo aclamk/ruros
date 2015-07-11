@@ -86,7 +86,8 @@ void* Connection::input_processor()
 			//printf("IP cal tid=%d conn=%p thr=%p cnt=%d\n",caller_tid,this,thr,thr->recursion_count);
 
 			thr->wakeup_data=data;
-			thr->setUsedConnection(this);
+			//thr->setUsedConnection(this);
+            thr->wakeup_conn=this;
 			this->ref();
 			//printf("IN conn=%p tid=%d\n",this,caller_tid);
 			sem_post(&thr->wakeup);

@@ -53,7 +53,7 @@ std::string generate_function_dispatch(const gen::Function& function)
 	for(i=0;i<function.args.size();i++)
 		if(function.args[i].dir==gen::d_in || function.args[i].dir==gen::d_inout)
 			out+=
-			"        if(__res==Success) __res=deserialize_"+function.args[i].type+"(__data,"+function.args[i].name+");\n";
+			"        if(__res==Success) __res=deserialize<"+function.args[i].type+">(__data,"+function.args[i].name+");\n";
 	out+="        if(__res==Success) __res="+function.name+"(";
 	for(i=0;i<function.args.size();i++)
 	{
@@ -65,7 +65,7 @@ std::string generate_function_dispatch(const gen::Function& function)
 	for(i=0;i<function.args.size();i++)
 		if(function.args[i].dir==gen::d_out || function.args[i].dir==gen::d_inout)
 			out+=
-			"        if(__res==Success) __res=serialize_"+function.args[i].type+"(__data,"+function.args[i].name+");\n";
+			"        if(__res==Success) __res=serialize<"+function.args[i].type+">(__data,"+function.args[i].name+");\n";
 	out+=
 	"    break;\n"
 	"    }\n";
@@ -141,7 +141,7 @@ std::string generate_client_stubs(const gen::Service& service)
 		{
 			if(func.args[i].dir==gen::d_in||func.args[i].dir==gen::d_inout)
 			{
-				out+="    if(__res==Success) __res=serialize_"+func.args[i].type+"(__data,"+func.args[i].name+");\n";
+				out+="    if(__res==Success) __res=serialize<"+func.args[i].type+">(__data,"+func.args[i].name+");\n";
 			}
 		}
         if(service.debug)
@@ -155,7 +155,7 @@ std::string generate_client_stubs(const gen::Service& service)
               if(func.args[i].dir==gen::d_in||func.args[i].dir==gen::d_inout)
               {
                  out+="        __s+=\""+func.args[i].name+"=\"+"+
-                 "tostring_"+func.args[i].type+"("+func.args[i].name+")+\" \";\n";
+                 "tostring<"+func.args[i].type+">("+func.args[i].name+")+\" \";\n";
               }
            }
            out+="        __debug=\""+service.name+"::"+func.name+"( \"+__s+\")\";\n";
@@ -173,7 +173,7 @@ std::string generate_client_stubs(const gen::Service& service)
 		{
 			if(func.args[i].dir==gen::d_out||func.args[i].dir==gen::d_inout)
 			{
-						out+="    if(__res==Success) __res=deserialize_"+func.args[i].type+"(__data,"+func.args[i].name+");\n";
+						out+="    if(__res==Success) __res=deserialize<"+func.args[i].type+">(__data,"+func.args[i].name+");\n";
 			}
 		}
         if(service.debug)
@@ -187,7 +187,7 @@ std::string generate_client_stubs(const gen::Service& service)
               if(func.args[i].dir==gen::d_out||func.args[i].dir==gen::d_inout)
               {
                  out+="        __s+=\""+func.args[i].name+"=\"+"+
-                 "tostring_"+func.args[i].type+"("+func.args[i].name+")+\" \";\n";
+                 "tostring<"+func.args[i].type+">("+func.args[i].name+")+\" \";\n";
               }
            }
            out+="        debug(__debug+\" "+service.name+"::"+func.name+"( \"+__s+\")\");\n";

@@ -348,6 +348,7 @@ int main( int argc, char **argv )
 				usage();
 			}
 			fidl=fopen(*argv, "r");
+			yypos.file=*argv;
 			if(fidl==NULL)
 			{
 				fprintf(stderr,"Cannot open '%s'\n",*argv);

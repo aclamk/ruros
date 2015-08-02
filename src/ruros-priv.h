@@ -79,6 +79,7 @@ public:
 
 	sem_t wakeup;
 	std::string wakeup_data;
+    Connection* wakeup_conn;
 	bool is_worker;
 	int recursion_count;
 	uint16_t original_tid;

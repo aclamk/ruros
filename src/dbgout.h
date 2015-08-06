@@ -6,6 +6,18 @@
 #include <typeinfo>
 #include <assert.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+static pid_t gettid()
+{
+   return (pid_t) syscall (SYS_gettid);
+}
 
 #define _DBG_CONCATENATE(x, y)  x##y
 #define DBG_CONCATENATE(x, y)   _DBG_CONCATENATE(x, y)
@@ -46,17 +58,6 @@ void _dbg_warn(const char *fmt, ...);
 void _dbg_err(const char *fmt, ...);
 void _dbg_wtf(const char *fmt, ...);
 
-class _dbg_info_block
-{
-public:
-    _dbg_info_block(const char *fmt, ...);
-    ~_dbg_info_block();
-private:
-    void print(const char *pr);
-    char *str;
-};
-
-#endif // DEBUG
 
 
 #if defined (DEBUG)
@@ -112,6 +113,170 @@ private:
 #define DBG_INFO_EXT(...)
 #endif
 
-#endif
 
 #define UNUSED(x) (void)x
+
+
+
+
+
+#ifdef DBG_MODULE_NAME
+static const char* __dbg__debug_env=DBG_MODULE_NAME"_DEBUG";
+#else
+static const char* __dbg__debug_env="DEBUG";
+#endif
+static int __dbg__level=-1;
+
+static void __dbg__read_env() __attribute__((constructor));
+static void __dbg__read_env()
+{
+   char* p=getenv(__dbg__debug_env);
+   if(p==NULL)
+      __dbg__level=0;
+   else
+   {
+      int i;
+      i=atoi(__dbg__debug_env);
+      if(i<0) i=0;
+      if(i>=5) i=5;
+      __dbg__level=i;
+   }
+}
+
+static void dbg_print(int lvl, const char *fmt, va_list args)
+{
+	if (lvl <= DEBUG_LEVEL)
+	{
+		char *p = NULL;
+		switch (lvl)
+		{
+			case 1:
+				p = (char*) FONT_COLOR(C_BLACK) BG_COLOR_HI(C_PURPLE) "  WTF: "
+                    FONT_RESET FONT_COLOR(C_BLACK) BG_COLOR_HI(C_RED) " ";
+				break;
+
+			case 2:
+				p = (char*) FMT_COLOR(C_WHITE, C_RED) FONT_BOLD "  ERR: "
+                    FONT_RESET " ";
+				break;
+
+			case 3:
+				p = (char*) FMT_COLOR(C_WHITE, C_BLUE) FONT_BOLD " WARN: "
+                    FONT_RESET " ";
+				break;
+
+			case 4:
+			case 5:
+				p = (char*) FONT_COLOR(C_BLACK) BG_COLOR_HI(C_YELLOW) " INFO: "
+                    FONT_RESET " ";
+				break;
+
+			default:
+				p = (char*)"  ???: ";
+				break;
+		}
+
+		size_t len = strlen(fmt) + 64;
+		char *buff = new char[len];
+
+		strcpy(buff, p);
+		strcat(buff, fmt);
+		strcat(buff, " " FONT_RESET "\n");
+		vfprintf(stderr, buff, args);
+
+		ASSERT(sizeof(buff) < len);
+		delete [] buff;
+	}
+}
+
+void _dbg_info_ext(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	dbg_print(5, fmt, args);
+	va_end(args);
+}
+
+void _dbg_info(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	dbg_print(4, fmt, args);
+	va_end(args);
+}
+
+void _dbg_warn(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	dbg_print(3, fmt, args);
+	va_end(args);
+}
+
+void _dbg_err(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	dbg_print(2, fmt, args);
+	va_end(args);
+}
+
+void _dbg_wtf(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	dbg_print(1, fmt, args);
+	va_end(args);
+}
+
+void _dbg_wtf(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	dbg_print(1, fmt, args);
+	va_end(args);
+}
+
+
+static __thread pid_t threadid = -1;
+__thread int __dbg__blocklvl __attribute__((weak)) = 0;
+
+class _dbg_info_block
+{
+public:
+    _dbg_info_block(const char *fmt, ...);
+    ~_dbg_info_block();
+private:
+    void print(const char *pr);
+    char *str;
+};
+
+_dbg_info_block::_dbg_info_block(const char *fmt, ...) : str(NULL)
+{
+    if (threadid == -1)
+       threadid = gettid();
+
+	va_list args;
+	va_start(args, fmt);
+    vasprintf(&str, fmt, args);
+	va_end(args);
+    print("++");
+    __dbg__blocklvl++;
+}
+
+_dbg_info_block::~_dbg_info_block()
+{
+    __dbg__blocklvl--;
+    print("--");
+    free(str);
+}
+
+void _dbg_info_block::print(const char *pr)
+{
+    fprintf(stderr, FMT_COLOR(C_BLACK, C_YELLOW) " BLCK: " FONT_RESET " "
+           FONT_COLOR_HI("%c") BG_COLOR(C_BLACK) "%2d: %*s %s" FONT_RESET "\n",
+           '2'+(threadid%5), threadid, __dbg__blocklvl*4+2, pr, str);
+}
+
+#endif // DEBUG
+#endif

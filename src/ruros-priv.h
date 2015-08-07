@@ -52,6 +52,7 @@ typedef enum
 class Thread
 {
 public:
+    Thread();
 	static Thread* getCurrent();
 	//void call(Connection* conn,uint8_t* msg,size_t size);
 
@@ -88,14 +89,6 @@ public:
 
 	static pthread_key_t thread_key;
 	static sem_t worker_created_sem;
-
-	Result debug_beforecall_res;
-	ServiceClientSide* debug_beforecall_serv;
-	std::string debug_beforecall_func;
-	std::string debug_beforecall_params;
-
-	ServiceClientSide* debug_oncall_serv;
-
 };
 /*
 class ServiceServer

@@ -25,6 +25,18 @@ long gettid()
 
 sem_t Thread::worker_created_sem;
 
+
+Thread::Thread():
+   wakeup_conn(NULL),
+   is_worker(false),
+   recursion_count(0),
+   original_tid(0),
+   used_connection(NULL),
+   selected_connection(NULL)      
+{
+   sem_init(&wakeup,0,0);
+}
+   
 Thread* Thread::getCurrent()
 {
 	void* t;
@@ -51,9 +63,11 @@ void Thread::cancelwait()
 }
 void Thread::wait(std::string& recv_data)
 {
+   //printf("Thread %p waiting\n",this);
 	//addWaitingThread(this);
 	sem_wait(&wakeup);
 	recv_data=wakeup_data;
+    //printf("Thread %p woke up\n",this);
 }
 
 void Thread::worker_loop()
@@ -68,7 +82,7 @@ void Thread::worker_loop()
 	while(keep_working)
 	{
 		wait(recv_data);
-		//printf("worker wakeup tid=%d\n",original_tid);
+		//printf("worker wakeup tid=%d is_worker=%d\n",original_tid,is_worker);
 		//conn=getUsedConnection();
         conn=wakeup_conn;
         setUsedConnection(conn);

@@ -1,7 +1,7 @@
 .PHONY: gen/gen
-CXXFLAGS =	-O2 -pg -ggdb3 -Wall -I .
+CXXFLAGS =	-O2 -ggdb3 -Wall -I .
 
-OBJS =		client_call.o connection.o ruros.o threads.o service0.o serialize.o
+OBJS =		client_call.o connection.o ruros.o threads.o service0.o serialize.o tests/unix_io.o
 #service0.o 
 LIBS =
 

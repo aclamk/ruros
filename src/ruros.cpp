@@ -288,7 +288,8 @@ Thread* releaseWaitingThread(uint16_t tid)
 			if(thr->recursion_count==0)
 			{
 				waiting_threads.erase(it);
-				free_workers.push_back(thr);//addFreeWorker(thr);
+                if(thr->is_worker)
+                   free_workers.push_back(thr);//addFreeWorker(thr);
 			}
 			break;
 		}
@@ -336,16 +337,17 @@ Thread* getFreeWorker()
 	pthread_mutex_lock(&lock);
 	if(!free_workers.empty())
 	{
-		//printf("fw size=%d\n",free_workers.size());
+       //printf("fw size=%d\n",free_workers.size());
 		thr=free_workers.back();
 		free_workers.pop_back();
-		//printf("GOT existing thr=%p\n",thr);
+        //printf("GOT existing thr=%p\n",thr);
 	}
 	else
 	{
 		//TODO create worker
 		//TODO need critical section
 		thr=new Thread();
+        thr->is_worker=true;
 		if(thread_create!=NULL)
 		{
 			bool b;

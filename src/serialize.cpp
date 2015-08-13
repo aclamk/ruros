@@ -5,6 +5,34 @@
 using namespace ruros;
 namespace ruros
 {
+   template<> ruros::Result serialize<>(std::string& data,const uint32_t& x)
+   {
+      unsigned char buf[4];
+      buf[0]=(x>>24)&0xff;
+      buf[1]=(x>>16)&0xff;
+      buf[2]=(x>>8)&0xff;
+      buf[3]=(x>>0)&0xff;
+      data+=std::string((char*)buf,4);
+      return Success;
+   }
+   template<> ruros::Result deserialize<>(std::string& data,uint32_t& x)
+   {
+      if(data.size()<4)
+         return CannotResolve;
+      uint8_t *d=(uint8_t*)data.c_str();
+      x=(d[0]<<24)+(d[1]<<16)+(d[2]<<8)+(d[3]<<0);
+      data=data.substr(4);
+      return Success;
+   }
+   template<> std::string tostring<>(const uint32_t& x)
+   {
+      char c[15];
+      sprintf(c,"0x%8.8x",x);
+      return (char*)c;
+   }
+
+   
+   
    template<> ruros::Result serialize<>(std::string& data,const int& x)
    {
       unsigned char buf[4];

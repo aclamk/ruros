@@ -73,7 +73,7 @@ void* Connection::input_processor()
 			{
 				//no such waiting thread, elect some worker
 				thr=getFreeWorker();
-				//printf("got free worker %p\n",thr);
+				//printf("got free worker %p is_worker=%d\n",thr,thr->is_worker);
 				//TODO!!! handle problem if thread cannot be found
 				thr->setOriginalTid(caller_tid);
 				addWaitingThread(thr);
@@ -81,9 +81,9 @@ void* Connection::input_processor()
 			}
 			else
 			{
-				//printf("waiting thread popped %p\n",thr);
+               //printf("waiting thread popped %p\n",thr);
 			}
-			//printf("IP cal tid=%d conn=%p thr=%p cnt=%d\n",caller_tid,this,thr,thr->recursion_count);
+			//printf("IP cal tid=%d conn=%p thr=%p\n",caller_tid,this,thr);
 
 			thr->wakeup_data=data;
 			//thr->setUsedConnection(this);

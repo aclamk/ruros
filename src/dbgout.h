@@ -3,8 +3,8 @@
 
 #ifndef DEBUG
 
-#define ASSERT(...)
-#define DBG_CRASH
+#define DBG_ASSERT(...)
+#define DBG_CRASH()
 #define DBG_WTF(...)
 #define DBG_ERR(...)
 #define DBG_WARN(...)
@@ -24,7 +24,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
-
+#include <sys/time.h>
+#include <time.h>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -61,78 +62,102 @@
 #define FMT_MODULE(s)	FONT_COLOR(C_BLACK) BG_COLOR_HI(C_GREEN) "[" s "]" FONT_RESET
 
 
-#define DBG_CRASH               (*(int*)NULL = 0x69)
-#define ASSERT(x) \
-    if (!(x)) \
-    { \
+#define DBG_CRASH() (*(int*)NULL = 0x69)
+#define DBG_ASSERT(x) do {                      \
+    if (!(x)) { \
         DBG_ERR(FMT_HIGH(" Assertion '" #x "' failed ") " %s:%u: %s", \
                 __FILE__, __LINE__, __PRETTY_FUNCTION__); \
-        DBG_CRASH; \
-    }
+        DBG_CRASH();                                      \
+    } } while(false)
 
-#define DBG_WTF 	_dbg_wtf
-#define DBG_ERR 	_dbg_err
-#define DBG_WARN	_dbg_warn
-#define DBG_INFO    _dbg_info
-#define DBG_INFO_EXT _dbg_info_ext
+#define DBG_WTF 	__dbg__wtf
+#define DBG_ERR 	__dbg__err
+#define DBG_WARN	__dbg__warn
+#define DBG_INFO    __dbg__info
+#define DBG_INFO_EXT __dbg__info_ext
 
-#define DBG_BLOCK           _dbg_info_block DBG_MAKE_UNIQUE(__dbg_block_)
+#define DBG_BLOCK           __dbg__info_block DBG_MAKE_UNIQUE(__dbg__block_)
 #define DBG_BLOCK_FUNC()    DBG_BLOCK(__PRETTY_FUNCTION__)
 #define DBG_BLOCK_METHOD()  DBG_BLOCK("%s %p", __PRETTY_FUNCTION__, this)
 
-/*run-time context for module*/
+/*run-time context for all modules*/
+bool __dbg__withtime __attribute__((weak)) = false;
+bool __dbg__withtime_precise __attribute__((weak)) = false;
+
+/*run-time context for this module*/
 static int __dbg__level=0;
 static bool __dbg__traceblocks=false;
 static bool __dbg__mono=true;
 
 /*run-time context for thread*/
 int __dbg__threadid_last __attribute__((weak)) = 0;
-__thread int __dbg__threadid = -1;
+__thread int __dbg__threadid __attribute__((weak)) = -1;
 __thread int __dbg__blocklvl __attribute__((weak)) = 0;
-
-#ifdef DBG_MODULE_NAME
-static const char* __dbg__debug_env=DBG_MODULE_NAME"_DEBUG";
-#else
-static const char* __dbg__debug_env="DEBUG";
-#endif
 
 static void __dbg__read_env() __attribute__((constructor));
 static void __dbg__read_env()
 {
-   char* p=getenv(__dbg__debug_env);
-   if(p!=NULL)
+#ifdef DBG_MODULE_NAME
+   const char* varname[2]={"DEBUG","DEBUG_" DBG_MODULE_NAME};
+#else
+   const char* varname[1]={"DEBUG"};
+#endif
+   for(size_t i=0;i<sizeof(varname)/sizeof(*varname);i++)
    {
-      while(*p!=0)
+      char* p=getenv(varname[i]);
+      if(p!=NULL)
       {
-         if(*p>='0' && *p<='5') __dbg__level=*p-'0';
-         else if(*p == 't') __dbg__traceblocks=true;
-         else if(*p == 'c') __dbg__mono=false;
-         else
+         while(*p!=0)
          {
-            fprintf(stderr,"Unknown control char '%c' in $%s\n",*p,__dbg__debug_env);
+            if(*p>='0' && *p<='5') __dbg__level=*p-'0';
+            else if(*p == 'b') __dbg__traceblocks=true;
+            else if(*p == 'c') __dbg__mono=false;
+            else if(*p == 't') __dbg__withtime=true;
+            else if(*p == 'T') __dbg__withtime=__dbg__withtime_precise=true;
+            else
+            {
+               fprintf(stderr,"Unknown control char '%c' in $%s\n",*p,varname[i]);
+            }
+            p++;
          }
-         p++;
       }
    }
 }
 
-class _dbg_info_block
+static void inline __dbg__formattimenow(char strtime[sizeof("01:02:03.456789  ")])
+{
+   struct timeval tv;
+   struct tm time;
+   if(__dbg__withtime)
+   {
+      gettimeofday(&tv,NULL);
+      localtime_r(&tv.tv_sec,&time);
+      if(__dbg__withtime_precise)
+         sprintf(strtime,"%2.2d:%2.2d:%2.2d.%6ld ",time.tm_hour,time.tm_min,time.tm_sec,tv.tv_usec);
+      else
+         sprintf(strtime,"%2.2d:%2.2d:%2.2d ",time.tm_hour,time.tm_min,time.tm_sec);
+   }
+   else
+      strtime[0]='\0';
+}
+
+namespace {
+class __dbg__info_block
 {
 public:
-    _dbg_info_block(const char *fmt, ...);
-    ~_dbg_info_block();
+    __dbg__info_block(const char *fmt, ...);
+    ~__dbg__info_block();
 private:
     void print(const char *pr);
     char *str;
 };
 
-_dbg_info_block::_dbg_info_block(const char *fmt, ...) : str(NULL)
+__dbg__info_block::__dbg__info_block(const char *fmt, ...) : str(NULL)
 {
    if(__dbg__traceblocks)
    {
       if (__dbg__threadid == -1)
          __dbg__threadid = __dbg__threadid_last++;
-
       va_list args;
       va_start(args, fmt);
       vasprintf(&str, fmt, args);
@@ -144,7 +169,7 @@ _dbg_info_block::_dbg_info_block(const char *fmt, ...) : str(NULL)
       str=NULL;
 }
 
-_dbg_info_block::~_dbg_info_block()
+__dbg__info_block::~__dbg__info_block()
 {
    if(str!=NULL)
    {
@@ -154,20 +179,22 @@ _dbg_info_block::~_dbg_info_block()
    }
 }
 
-void _dbg_info_block::print(const char *pr)
+void __dbg__info_block::print(const char *pr)
 {
+   char strtime[sizeof("01:02:03.456789  ")];
+   __dbg__formattimenow(strtime);
    if(__dbg__mono)
-      fprintf(stderr, " BLCK:  %2d: %*s %s\n",
-              __dbg__threadid, __dbg__blocklvl*3+2, pr, str);
+      fprintf(stderr, "%sBLCK:  %2d: %*s %s\n",
+              strtime,__dbg__threadid, __dbg__blocklvl*3+2, pr, str);
    else
-      fprintf(stderr, FMT_COLOR(C_BLACK, C_YELLOW) " BLCK: " FONT_RESET " "
+      fprintf(stderr, "%s" FMT_COLOR(C_BLACK, C_YELLOW) " BLCK: " FONT_RESET " "
               FONT_COLOR_HI("%c") BG_COLOR(C_BLACK) "%2d: %*s %s" FONT_RESET "\n",
-              '2'+(__dbg__threadid%5),__dbg__threadid, __dbg__blocklvl*3+2, pr, str);
+              strtime,'2'+(__dbg__threadid%5),__dbg__threadid, __dbg__blocklvl*3+2, pr, str);
 }
+}
+static void __dbg__err(const char *fmt, ...);
 
-static void _dbg_err(const char *fmt, ...);
-
-static void dbg_print(int lvl, const char *fmt, va_list args)
+static void __dbg__print(int lvl, const char *fmt, va_list args)
 {
 	if (lvl <= __dbg__level)
 	{
@@ -227,60 +254,66 @@ static void dbg_print(int lvl, const char *fmt, va_list args)
 		size_t len = 100;
 		char buff[len];
         char* str=NULL;
-		strcpy(buff, p);
+
+        char strtime[sizeof("01:02:03.456789  ")];
+        __dbg__formattimenow(strtime);
+
+        strcpy(buff, "%s");
+		strcpy(buff+2, p);
+        
         if(__dbg__mono)
         {
            strcat(buff, "%2d:%*c%s \n");
-           vasprintf(&str, fmt, args);
-           fprintf(stderr, buff, __dbg__threadid, __dbg__blocklvl*3+1, ' ', str);
+           if(vasprintf(&str, fmt, args))
+              fprintf(stderr, buff, strtime, __dbg__threadid, __dbg__blocklvl*3+1, ' ', str);
         }        
         else
         {
            strcat(buff, FONT_COLOR_HI("%c") BG_COLOR(C_BLACK) "%2d:%*c%s " FONT_RESET "\n");
-           vasprintf(&str, fmt, args);
-           fprintf(stderr, buff, '2'+(__dbg__threadid%5), __dbg__threadid, __dbg__blocklvl*3+1, ' ', str);
+           if(vasprintf(&str, fmt, args))
+              fprintf(stderr, buff, strtime, '2'+(__dbg__threadid%5), __dbg__threadid, __dbg__blocklvl*3+1, ' ', str);
         }
         free(str);
 	}
 }
 
-static inline void _dbg_info_ext(const char *fmt, ...)
+static inline void __dbg__info_ext(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-    dbg_print(5, fmt, args);
+    __dbg__print(5, fmt, args);
 	va_end(args);
 }
 
-static inline void _dbg_info(const char *fmt, ...)
+static inline void __dbg__info(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	dbg_print(4, fmt, args);
+	__dbg__print(4, fmt, args);
 	va_end(args);
 }
 
-static inline void _dbg_warn(const char *fmt, ...)
+static inline void __dbg__warn(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	dbg_print(3, fmt, args);
+	__dbg__print(3, fmt, args);
 	va_end(args);
 }
 
-static inline void _dbg_err(const char *fmt, ...)
+static inline void __dbg__err(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	dbg_print(2, fmt, args);
+	__dbg__print(2, fmt, args);
 	va_end(args);
 }
 
-static inline void _dbg_wtf(const char *fmt, ...)
+static inline void __dbg__wtf(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	dbg_print(1, fmt, args);
+	__dbg__print(1, fmt, args);
 	va_end(args);
 }
 

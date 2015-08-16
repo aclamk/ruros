@@ -1,6 +1,8 @@
 #ifndef __DBGOUT_H__
 #define __DBGOUT_H__
-
+/* Colorful and simple logging utility.
+   Original version Michal Szymaniak.
+   Modified for single header file Adam Kupczyk */
 #ifndef DEBUG
 
 #define DBG_ASSERT(...)

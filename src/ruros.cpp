@@ -5,6 +5,8 @@
 // Copyright   : Your copyright notice
 // Description : Hello World in C, Ansi-style
 //============================================================================
+#define DBG_MODULE_NAME "RUROS"
+#include "dbgout.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -362,10 +364,10 @@ Thread* getFreeWorker()
 				sem_wait(&Thread::worker_created_sem);
 			}
 		}
-		//printf("CREATED new thr=%p\n",thr);
+        DBG_INFO("Worker thread %p created",thr);
 	}
 	pthread_mutex_unlock(&lock);
-	//printf("picked thr=%p\n",thr);
+    DBG_INFO_EXT("Worker thread %p picked",thr);
 	return thr;
 }
 

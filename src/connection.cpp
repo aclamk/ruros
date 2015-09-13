@@ -5,6 +5,8 @@
  *      Author: adam
  */
 
+#define DBG_MODULE_NAME "RUROS"
+#include "dbgout.h"
 
 #include <stdlib.h>
 #include <semaphore.h>
@@ -61,10 +63,10 @@ void* Connection::input_processor()
 		uint16_t caller_tid;
 		caller_tid=((uint16_t)data[0])<<8 | (uint8_t)data[1];
 		uint8_t command=data[2];
-		//printf("%8.8x cmd=%d\n",caller_tid,command);
 		switch(command)
 		{
 		case CmdCall:
+            DBG_INFO_EXT("Thread %d calls",caller_tid);
 			//execute call incoming from remote end
 			//this is either new call, and we have to wake up any worker thread
 			//or it is callback that has to wake specific thread
@@ -73,17 +75,16 @@ void* Connection::input_processor()
 			{
 				//no such waiting thread, elect some worker
 				thr=getFreeWorker();
+                if(thr==NULL)
+                {
+                    DBG_ERR("Worker thread unavailable");
+                }
 				//printf("got free worker %p is_worker=%d\n",thr,thr->is_worker);
 				//TODO!!! handle problem if thread cannot be found
 				thr->setOriginalTid(caller_tid);
 				addWaitingThread(thr);
 				thr->recursion_count=1;
 			}
-			else
-			{
-               //printf("waiting thread popped %p\n",thr);
-			}
-			//printf("IP cal tid=%d conn=%p thr=%p\n",caller_tid,this,thr);
 
 			thr->wakeup_data=data;
 			//thr->setUsedConnection(this);
@@ -95,22 +96,18 @@ void* Connection::input_processor()
 			break;
 
 		case CmdReturn:
+            DBG_INFO_EXT("Thread %d return",caller_tid);            
 			//some thread must be waiting to receive
 			thr=findWaitingThread(caller_tid);
 			//thr=ruros::releaseWaitingThread(caller_tid);
-			if(thr==NULL)
-			{
-				//TODO wtf
-				printf("IP ret tid=%d conn=%p\n",caller_tid,this);
-				assert(0);
-			}
-			//printf("IP ret tid=%d conn=%p thr=%p cnt=%d\n",caller_tid,this,thr,thr->recursion_count);
+            DBG_ASSERT(thr!=NULL&&"no thread waiting for return");
 			//wyscig miedzy releasewaiting a obudzeniem threada, ktos mu moze wpisac
 			thr->wakeup_data=data;
 			sem_post(&thr->wakeup);
 			break;
 		default:
-			//TODO
+            DBG_ERR("Received garbled command\n");
+			//TODO add handling
 			assert(0);
 		}
 	}

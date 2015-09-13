@@ -4,6 +4,8 @@
  *  Created on: Mar 6, 2015
  *      Author: adam
  */
+#define DBG_MODULE_NAME "RUROS"
+#include "dbgout.h"
 
 #include "ruros-priv.h"
 #include <assert.h>
@@ -63,11 +65,11 @@ void Thread::cancelwait()
 }
 void Thread::wait(std::string& recv_data)
 {
-   //printf("Thread %p waiting\n",this);
+    DBG_INFO_EXT("Thread %p waiting",this);
 	//addWaitingThread(this);
 	sem_wait(&wakeup);
 	recv_data=wakeup_data;
-    //printf("Thread %p woke up\n",this);
+    DBG_INFO_EXT("Thread %p woke up",this);
 }
 
 void Thread::worker_loop()
@@ -82,14 +84,14 @@ void Thread::worker_loop()
 	while(keep_working)
 	{
 		wait(recv_data);
-		//printf("worker wakeup tid=%d is_worker=%d\n",original_tid,is_worker);
+        DBG_INFO_EXT("Worker for tid=%d",original_tid);
 		//conn=getUsedConnection();
         conn=wakeup_conn;
         setUsedConnection(conn);
 
 		if(recv_data.size()>0)
 		{
-			assert(conn!=NULL);
+            DBG_ASSERT(conn!=NULL);
 			handleCall(conn,recv_data);
 			//printf("X\n");
 			conn->unref();
@@ -143,6 +145,8 @@ Result Thread::clientCallwaitReturn(Connection* conn, std::string& io_data)
 			case CmdException:
 				res=Exception;
 				break;
+            default:
+                DBG_ASSERT(0&&"garbled command");
 		}
 		//res=Success;
 	}
@@ -170,6 +174,8 @@ Result Thread::handleCall(Connection* conn,std::string& io_data)
 	io_data=io_data.substr(4);
 	//call_id=data[4];
 	ServiceServerSide* service_called=conn->getService(service_id);
+    DBG_ASSERT(service_called!=NULL);
+    DBG_INFO("CALL tid=%d conn=%p service=%s",original_tid,conn,service_called->name);
 	//printf("conn=%p service_id=%d sss=%p %s\n",conn,service_id,service_called,service_called->name);
 	try
 	{
@@ -213,10 +219,11 @@ Result Thread::handleCall(Connection* conn,std::string& io_data)
 		buf[5]=(tid>>0)&0xff;
 		buf[6]=CmdReturn;
 		//printf("CC ret tid=%d conn=%p\n",tid,conn);
+        DBG_INFO("RET  tid=%d conn=%p",tid,conn);
 		releaseWaitingThread(tid);
 		//printf("CC ret tid=%d conn=%p thr=%p cnt=%d\n",tid,conn,this,this->recursion_count);
 		res=conn->sendMessage(std::string((char*)buf,7)+io_data);
-
+        if(res!=Success) DBG_ERR("Error sending message conn=%p",conn);
 		//printf("OUT %p %d thr=%p\n",conn,tid,this);
 	}
 	conn->call_out();

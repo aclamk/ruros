@@ -65,11 +65,11 @@ void Thread::cancelwait()
 }
 void Thread::wait(std::string& recv_data)
 {
-    DBG_INFO_EXT("Thread %p waiting",this);
+    DBG(INFO,"Thread %p waiting",this);
 	//addWaitingThread(this);
 	sem_wait(&wakeup);
 	recv_data=wakeup_data;
-    DBG_INFO_EXT("Thread %p woke up",this);
+    DBG(INFO,"Thread %p woke up",this);
 }
 
 void Thread::worker_loop()
@@ -84,7 +84,7 @@ void Thread::worker_loop()
 	while(keep_working)
 	{
 		wait(recv_data);
-        DBG_INFO_EXT("Worker for tid=%d",original_tid);
+        DBG(INFO,"Worker for tid=%d",original_tid);
 		//conn=getUsedConnection();
         conn=wakeup_conn;
         setUsedConnection(conn);
@@ -175,7 +175,7 @@ Result Thread::handleCall(Connection* conn,std::string& io_data)
 	//call_id=data[4];
 	ServiceServerSide* service_called=conn->getService(service_id);
     DBG_ASSERT(service_called!=NULL);
-    DBG_INFO("CALL tid=%d conn=%p service=%s",original_tid,conn,service_called->name);
+    DBG(INFO,"CALL tid=%d conn=%p service=%s",original_tid,conn,service_called->name);
 	//printf("conn=%p service_id=%d sss=%p %s\n",conn,service_id,service_called,service_called->name);
 	try
 	{
@@ -219,11 +219,11 @@ Result Thread::handleCall(Connection* conn,std::string& io_data)
 		buf[5]=(tid>>0)&0xff;
 		buf[6]=CmdReturn;
 		//printf("CC ret tid=%d conn=%p\n",tid,conn);
-        DBG_INFO("RET  tid=%d conn=%p",tid,conn);
+        DBG(INFO,"RET  tid=%d conn=%p",tid,conn);
 		releaseWaitingThread(tid);
 		//printf("CC ret tid=%d conn=%p thr=%p cnt=%d\n",tid,conn,this,this->recursion_count);
 		res=conn->sendMessage(std::string((char*)buf,7)+io_data);
-        if(res!=Success) DBG_ERR("Error sending message conn=%p",conn);
+        if(res!=Success) DBG(ERR,"Error sending message conn=%p",conn);
 		//printf("OUT %p %d thr=%p\n",conn,tid,this);
 	}
 	conn->call_out();

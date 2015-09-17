@@ -364,10 +364,10 @@ Thread* getFreeWorker()
 				sem_wait(&Thread::worker_created_sem);
 			}
 		}
-        DBG_INFO("Worker thread %p created",thr);
+        DBG(INFO,"Worker thread %p created",thr);
 	}
 	pthread_mutex_unlock(&lock);
-    DBG_INFO_EXT("Worker thread %p picked",thr);
+    DBG(DUMP,"Worker thread %p picked",thr);
 	return thr;
 }
 
@@ -394,4 +394,11 @@ void init()
 	sem_init(&Thread::worker_created_sem,0,0);
 	pthread_key_create(&Thread::thread_key,NULL);
 }
+}
+
+
+//extern "C" void __dbg__register_module(char* name, int* level, bool* traceblocks, bool* mono);
+void __dbg__register_module(char* name, int* level, bool* traceblocks, bool* mono)
+{
+   printf("MODULE %s level=%p, blocks=%p, mono=%p\n", name, level, traceblocks, mono);
 }

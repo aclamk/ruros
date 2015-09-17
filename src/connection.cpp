@@ -66,7 +66,7 @@ void* Connection::input_processor()
 		switch(command)
 		{
 		case CmdCall:
-            DBG_INFO_EXT("Thread %d calls",caller_tid);
+            DBG(DUMP,"Thread %d calls",caller_tid);
 			//execute call incoming from remote end
 			//this is either new call, and we have to wake up any worker thread
 			//or it is callback that has to wake specific thread
@@ -77,7 +77,7 @@ void* Connection::input_processor()
 				thr=getFreeWorker();
                 if(thr==NULL)
                 {
-                    DBG_ERR("Worker thread unavailable");
+                    DBG(ERR,"Worker thread unavailable");
                 }
 				//printf("got free worker %p is_worker=%d\n",thr,thr->is_worker);
 				//TODO!!! handle problem if thread cannot be found
@@ -96,7 +96,7 @@ void* Connection::input_processor()
 			break;
 
 		case CmdReturn:
-            DBG_INFO_EXT("Thread %d return",caller_tid);            
+            DBG(DUMP,"Thread %d return",caller_tid);            
 			//some thread must be waiting to receive
 			thr=findWaitingThread(caller_tid);
 			//thr=ruros::releaseWaitingThread(caller_tid);
@@ -106,7 +106,7 @@ void* Connection::input_processor()
 			sem_post(&thr->wakeup);
 			break;
 		default:
-            DBG_ERR("Received garbled command\n");
+            DBG(ERR,"Received garbled command\n");
 			//TODO add handling
 			assert(0);
 		}
@@ -194,8 +194,8 @@ void Connection::try_on_client_cleanup()
 				if(server_services[i]->on_client_cleanup!=NULL)
 					server_services[i]->on_client_cleanup(this);
 			}
+            state=ClosedCleanedup;
 		}
-		state=ClosedCleanedup;
 	}
 	pthread_mutex_unlock(&lock);
 }

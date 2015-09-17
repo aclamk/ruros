@@ -397,8 +397,3 @@ void init()
 }
 
 
-//extern "C" void __dbg__register_module(char* name, int* level, bool* traceblocks, bool* mono);
-void __dbg__register_module(char* name, int* level, bool* traceblocks, bool* mono)
-{
-   printf("MODULE %s level=%p, blocks=%p, mono=%p\n", name, level, traceblocks, mono);
-}

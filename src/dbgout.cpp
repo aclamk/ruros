@@ -1,49 +1,68 @@
-#define DBG_MODULE_NAME "TEST"
-#include "dbgout.h"
-#include <cstdarg>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <sys/types.h>
 #include <pthread.h>
+#include <string>
+#include <vector>
+struct debug_module
+{
+      std::string name;
+      int* level;
+      bool* traceblocks;
+      bool* mono;         
+};
+static std::vector<debug_module> *debug_modules=NULL;
+pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 
+void __dbg__register_module(const char* name, int* level, bool* traceblocks, bool* mono)
+{
+   debug_module d;
+   d.name=name;
+   d.level=level;
+   d.traceblocks=traceblocks;
+   d.mono=mono;
+   pthread_mutex_lock(&lock);
+   if(debug_modules==NULL) debug_modules=new std::vector<debug_module>;
+   debug_modules->push_back(d);
+   pthread_mutex_unlock(&lock);
+}
 
-void recursion(int x)
-{   
-   DBG_BLOCK("%d levels to go",x);
-   usleep((random()%300)*1000);
-   if(x>0)
+void DBG_set_level(const char* name,int level)
+{
+   pthread_mutex_lock(&lock);
+   std::vector<debug_module>::iterator it;
+   for(it=debug_modules->begin();it!=debug_modules->end();it++)
    {
-      x--;
-      _dbg_info_ext("about go invoke recursion with %d",x);
-      _dbg_info("recursion continues");   
-      recursion(x);
+      if(name==NULL||name==it->name)
+      {
+         *it->level=level;
+      }
    }
-   else
-      _dbg_info("recursion reached end");   
+   pthread_mutex_unlock(&lock);
 }
 
-void* func(void* ignored=0)
+void DBG_set_mono(const char* name,bool mono)
 {
-   _dbg_wtf("IMPOSSIBLE HAPPENED %d=%d",3,2);
-   _dbg_err("not enough free mem=%d bytes",7);
-   _dbg_warn("program went to sleep for %d seconds",1000000);
-   _dbg_info("thread execution continues %s %s %s","happily","ever","after");   
-   _dbg_info_ext("just calculated '+' for arguments %d and %d",42,69);
-
-   recursion(7);
-   return NULL;
+   pthread_mutex_lock(&lock);
+   std::vector<debug_module>::iterator it;
+   for(it=debug_modules->begin();it!=debug_modules->end();it++)
+   {
+      if(name==NULL||name==it->name)
+      {
+         *it->mono=mono;
+      }
+   }
+   pthread_mutex_unlock(&lock);
 }
 
-
-
-int main(int argc, char** argv)
+void DBG_set_blocks(const char* name,bool blocks)
 {
-   pthread_create(new pthread_t, NULL,func, NULL);
-   pthread_create(new pthread_t, NULL,func, NULL);
-   pthread_create(new pthread_t, NULL,func, NULL);
-   pthread_create(new pthread_t, NULL,func, NULL);
-   pthread_create(new pthread_t, NULL,func, NULL);
-   func();
-   sleep(1);
+   pthread_mutex_lock(&lock);
+   std::vector<debug_module>::iterator it;
+   for(it=debug_modules->begin();it!=debug_modules->end();it++)
+   {
+      if(name==NULL||name==it->name)
+      {
+         *it->traceblocks=blocks;
+      }
+   }
+   pthread_mutex_unlock(&lock);
 }

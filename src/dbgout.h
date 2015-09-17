@@ -133,7 +133,12 @@ static inline bool DBG(int lvl)
 #define DBG_BLOCK_FUNC()    __dbg__info_block DBG_CONCATENATE(__dbg__block_,__LINE__) (__PRETTY_FUNCTION__)
 #define DBG_BLOCK_METHOD()  __dbg__info_block DBG_CONCATENATE(__dbg__block_,__LINE__) ("%s %p", __PRETTY_FUNCTION__, this)
 
-void __dbg__register_module(char* name, int* level, bool* traceblocks, bool* mono) __attribute__ ((weak));
+void __dbg__register_module(const char* name, int* level, bool* traceblocks, bool* mono) __attribute__ ((weak));
+void DBG_set_level(const char* name,int level);
+void DBG_set_mono(const char* name,bool mono);
+void DBG_set_blocks(const char* name,bool blocks);
+
+
 
 static void __dbg__read_env() __attribute__((constructor));
 static void __dbg__read_env()
